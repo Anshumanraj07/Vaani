@@ -12,12 +12,78 @@ API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 # Page setup
 st.set_page_config(page_title="Project Vaani", page_icon="🧠", layout="centered")
 
-st.title("🧠 Project Vaani: Multi-Modal AI")
-st.markdown("### Discover your hidden superpowers through Voice & Action!")
+# --- DUOLINGO STYLE CSS INJECTION ---
+st.markdown("""
+    <style>
+        /* 1. Hide Streamlit branding and clutter */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
+        /* 2. Global App Background & Font styling */
+        .stApp {
+            background-color: #ffffff;
+            font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* 3. Chunky 3D Duolingo Buttons */
+        .stButton>button {
+            background-color: #58cc02; /* Duolingo Green */
+            color: white;
+            font-size: 18px !important;
+            font-weight: bold;
+            border-radius: 16px;
+            border: none;
+            border-bottom: 5px solid #58a700; /* The 3D effect */
+            padding: 12px 24px;
+            transition: all 0.1s ease;
+            width: 100%;
+        }
+        .stButton>button:active {
+            border-bottom: 0px; /* Push down effect */
+            transform: translateY(5px);
+        }
+        
+        /* 4. Make Text Inputs/Audio uploaders look friendlier */
+        .stAudio {
+            border-radius: 15px;
+            border: 2px solid #e5e5e5;
+            padding: 10px;
+        }
+        
+        /* 5. Tab Styling to look like game levels */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 15px;
+            background-color: #f7f7f7;
+            border: 2px solid #e5e5e5;
+            padding: 10px 20px;
+            font-weight: bold;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #ddf4ff; /* Light Blue */
+            color: #1cb0f6; /* Duolingo Blue */
+            border: 2px solid #1cb0f6;
+            border-bottom: 5px solid #1cb0f6; /* 3D effect for active tab */
+        }
+        
+        /* 6. Success/Info Boxes styling */
+        .stAlert {
+            border-radius: 15px;
+            border: 2px solid transparent;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("🧠 Project Vaani")
+st.markdown("### 🏆 Discover your hidden superpowers!")
 st.divider()
 
 # Create Tabs for different features
-tab1, tab2, tab3 = st.tabs(["🎙️ Voice Analysis", "🖱️ Interactive Puzzle (New!)", "📊 Clinical Dashboard"])
+tab1, tab2, tab3 = st.tabs(["🎙️ Voice Analysis", "🖱️ Interactive Puzzle", "📊 Clinical Dashboard"])
 
 # --- TAB 1: VOICE AI ---
 with tab1:
@@ -129,13 +195,11 @@ with tab2:
                 let clickTime = Date.now();
                 let totalRT = clickTime - targetAppearTime;
 
-                // Kinematics: Action Initiation Time (AIT)
                 let ait = totalRT;
                 if (mousePath.length > 0) {{
                     ait = mousePath[0].time - targetAppearTime;
                 }}
 
-                // Kinematics: Cursor Reversals (Direction hesitations)
                 let reversals = 0;
                 let lastDirection = 0;
                 for (let i = 1; i < mousePath.length; i++) {{
