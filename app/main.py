@@ -16,23 +16,13 @@ from app.services.db_svc import save_session, get_all_sessions
 
 app = FastAPI(title="Vaani")
 
-# CORS Configuration: Restrict to known origins for security
-allowed_origins = [
-    "http://localhost:8501",      # Streamlit local dev
-    "http://127.0.0.1:8501",
-]
-
-# Allow cloud Streamlit URL if configured via environment
-streamlit_cloud_url = os.getenv("STREAMLIT_CLOUD_URL")
-if streamlit_cloud_url:
-    allowed_origins.append(streamlit_cloud_url)
-
+# CORS Configuration: Allow requests from frontend origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=False,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_origins=["http://localhost:8501", "https://project-vaani.streamlit.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
