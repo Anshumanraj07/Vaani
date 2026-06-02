@@ -16,10 +16,14 @@ from app.services.db_svc import save_session, get_all_sessions
 
 app = FastAPI(title="Vaani")
 
-# CORS Configuration: Allow requests from frontend origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "https://project-vaani.streamlit.app"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "*" # (Local testing ke liye sab allow kar de)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
