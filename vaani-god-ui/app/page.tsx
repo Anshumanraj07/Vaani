@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Square, Play, Target, Palette, BarChart3, RefreshCw, Activity, Brain } from "lucide-react";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://vaani-fppo.onrender.com";
 
 export default function VaaniApp() {
   const [activeTab, setActiveTab] = useState("voice");
