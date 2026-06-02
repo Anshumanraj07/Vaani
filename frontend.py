@@ -3,6 +3,8 @@ import streamlit as st
 import requests
 import time
 import random
+import json
+import streamlit.components.v1 as components
 
 # Default to localhost for local dev, but allow cloud URL via environment variable
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
@@ -36,9 +38,33 @@ with tab1:
                         st.subheader("📝 What Vaani Heard:")
                         st.write(f"*{data['transcription']['text']}*")
                         st.subheader("🦸‍♂️ Your Superpower:")
-                        st.success(data['cognitive_analysis']['superpower'])
+                        superpower_text = data['cognitive_analysis']['superpower']
+                        st.success(superpower_text)
                         with st.expander("📊 Clinical Admin Report"):
                             st.info(data['cognitive_analysis']['admin_report'])
+                        
+                        # Text-to-Speech: Read the superpower aloud using Web Speech API
+                        escaped_superpower = json.dumps(superpower_text)
+                        components.html(f"""
+                        <div style="text-align: center; margin-top: 10px;">
+                            <button id="tts-btn" style="padding: 8px 16px; font-size: 14px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px;">
+                                🔊 Hear Your Superpower
+                            </button>
+                        </div>
+                        <script>
+                            document.getElementById('tts-btn').addEventListener('click', function() {{
+                                let superpower = {escaped_superpower};
+                                let utterance = new SpeechSynthesisUtterance(superpower);
+                                utterance.rate = 1.0;
+                                utterance.pitch = 1.0;
+                                utterance.volume = 1.0;
+                                window.speechSynthesis.speak(utterance);
+                                this.style.background = '#45a049';
+                                setTimeout(() => {{ this.style.background = '#4CAF50'; }}, 200);
+                            }});
+                        </script>
+                        """, height=50)
+                    
                     else:
                         st.error(f"Backend Error: {response.text}")
                 except Exception as e:
@@ -47,7 +73,6 @@ with tab1:
 # --- TAB 2: INTERACTIVE PUZZLE (PHASE 1.2) ---
 with tab2:
     st.write("Let's track your REAL mouse kinematics. Click Start, wait for the red target, and click it as fast as you can!")
-    import streamlit.components.v1 as components
     
     components.html(f"""
     <!DOCTYPE html>
