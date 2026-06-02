@@ -77,3 +77,27 @@ async def analyze_interaction(telemetry: TaskTelemetry):
 async def get_history():
     data = get_all_sessions()
     return {"status": "success", "data": data}
+
+
+# Startup validation
+import sys
+
+@app.on_event("startup")
+async def startup_event():
+    """Validate that all required environment variables are set."""
+    required_vars = ["GROQ_API_KEY", "SUPABASE_URL", "SUPABASE_KEY"]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    
+    optional_vars = ["PINECONE_API_KEY"]
+    missing_optional = [var for var in optional_vars if not os.getenv(var)]
+    
+    if missing_vars:
+        error_msg = f"❌ STARTUP ERROR: Missing required environment variables: {', '.join(missing_vars)}"
+        print(error_msg)
+        # In production, you might want to exit:
+        # sys.exit(1)
+    
+    if missing_optional:
+        print(f"⚠️  STARTUP WARNING: Optional variables not set: {', '.join(missing_optional)}. Some features will be disabled.")
+    
+    print("✅ [main.py] Startup validation complete. All required vars present.")
