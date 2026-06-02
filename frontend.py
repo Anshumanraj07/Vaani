@@ -10,33 +10,38 @@ API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 # Page setup
 st.set_page_config(page_title="Project Vaani", page_icon="🧠", layout="centered")
 
-# --- DUOLINGO STYLE CSS INJECTION ---
+# --- DUOLINGO STYLE CSS INJECTION (FIXED FOR DARK/LIGHT MODE) ---
 st.markdown("""
     <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
-        .stApp { background-color: #ffffff; font-family: 'Nunito', 'Segoe UI', sans-serif; }
+        
+        /* Removed forced white background so text remains visible in dark mode */
+        .stApp { font-family: 'Nunito', 'Segoe UI', sans-serif; }
+        
         .stButton>button {
-            background-color: #58cc02; color: white; font-size: 18px !important;
+            background-color: #58cc02; color: white !important; font-size: 18px !important;
             font-weight: bold; border-radius: 16px; border: none;
             border-bottom: 5px solid #58a700; padding: 12px 24px;
             transition: all 0.1s ease; width: 100%;
         }
         .stButton>button:active { border-bottom: 0px; transform: translateY(5px); }
-        .stAudio { border-radius: 15px; border: 2px solid #e5e5e5; padding: 10px; }
+        .stAudio { border-radius: 15px; border: 2px solid #58cc02; padding: 10px; }
+        
         .stTabs [data-baseweb="tab-list"] { gap: 10px; padding-bottom: 10px; }
         .stTabs [data-baseweb="tab"] {
-            border-radius: 15px; background-color: #f7f7f7; border: 2px solid #e5e5e5;
+            border-radius: 15px; background-color: transparent; border: 2px solid #888888;
             padding: 10px 20px; font-weight: bold;
         }
         .stTabs [aria-selected="true"] {
-            background-color: #ddf4ff; color: #1cb0f6; border: 2px solid #1cb0f6;
+            background-color: rgba(28, 176, 246, 0.1); color: #1cb0f6; border: 2px solid #1cb0f6;
             border-bottom: 5px solid #1cb0f6;
         }
+        
         .stAlert { border-radius: 15px; border: 2px solid transparent; }
-        /* Make radio buttons look better */
-        div[role="radiogroup"] { padding: 10px; background: #f0f2f6; border-radius: 15px; border: 2px solid #e5e5e5; }
+        /* Make radio buttons look better in any theme */
+        div[role="radiogroup"] { padding: 10px; border-radius: 15px; border: 2px solid #888888; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -103,10 +108,10 @@ with tab2:
         <html>
         <head>
             <style>
-                #game-area {{ width: 100%; height: 350px; background: #1e1e1e; position: relative; border-radius: 10px; overflow: hidden; border: 2px solid #4CAF50;}}
+                #game-area {{ width: 100%; height: 350px; background: #1e1e1e; position: relative; border-radius: 10px; overflow: hidden; border: 2px solid #58cc02;}}
                 #target {{ width: 40px; height: 40px; background: #ff4b4b; position: absolute; border-radius: 50%; display: none; cursor: pointer; box-shadow: 0 0 10px #ff4b4b;}}
                 #start-btn {{ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 15px; background: #58cc02; border: none; border-bottom: 4px solid #58a700; color: white;}}
-                #result {{ font-family: sans-serif; margin-top: 15px; padding: 10px; background: #f0f2f6; border-radius: 10px; color: #333; font-weight: bold; text-align: center;}}
+                #result {{ font-family: sans-serif; margin-top: 15px; padding: 10px; background: #1e1e1e; border: 2px solid #58cc02; border-radius: 10px; color: #ffffff; font-weight: bold; text-align: center;}}
             </style>
         </head>
         <body>
@@ -177,8 +182,8 @@ with tab2:
                             body: JSON.stringify(payload)
                         }});
                         let data = await res.json();
-                        resultDiv.innerHTML = `Reaction Time: ${{totalRT}}ms | Reversals: ${{reversals}}<br><hr style="margin:5px 0;border-top:2px solid #ccc;">
-                        <span style="color:#2e7d32;">Pattern: ${{data.analysis.detected_pattern}}</span><br>🦸‍♂️ <b>${{data.analysis.superpower}}</b>`;
+                        resultDiv.innerHTML = `Reaction Time: ${{totalRT}}ms | Reversals: ${{reversals}}<br><hr style="margin:5px 0;border-top:2px solid #58cc02;">
+                        <span style="color:#58cc02;">Pattern: ${{data.analysis.detected_pattern}}</span><br>🦸‍♂️ <b>${{data.analysis.superpower}}</b>`;
                         setTimeout(() => {{ startBtn.style.display = 'block'; }}, 3000);
                     }} catch(err) {{
                         resultDiv.innerHTML = `<span style="color: red;">Error connecting to API.</span>`;
@@ -198,20 +203,20 @@ with tab2:
         <head>
             <style>
                 body {{ font-family: 'Nunito', sans-serif; text-align: center; margin:0; padding:0;}}
-                #game-container {{ background: #f7f7f7; padding: 20px; border-radius: 15px; border: 2px solid #e5e5e5; height: 380px; position:relative;}}
+                #game-container {{ background: #1e1e1e; padding: 20px; border-radius: 15px; border: 2px solid #58cc02; height: 380px; position:relative;}}
                 #word-display {{ font-size: 50px; font-weight: 900; margin: 40px 0; text-transform: uppercase; letter-spacing: 2px;}}
                 .btn-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 300px; margin: 0 auto;}}
-                .color-btn {{ padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 12px; color: white; border-bottom: 4px solid rgba(0,0,0,0.2); transition: transform 0.1s;}}
+                .color-btn {{ padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 12px; color: white; border-bottom: 4px solid rgba(0,0,0,0.4); transition: transform 0.1s;}}
                 .color-btn:active {{ transform: translateY(4px); border-bottom: none;}}
                 #start-btn {{ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 15px; background: #58cc02; border: none; border-bottom: 4px solid #58a700; color: white;}}
-                #result {{ margin-top: 15px; font-weight: bold; color: #333; padding:10px; background:#e0f7fa; border-radius: 10px;}}
+                #result {{ margin-top: 15px; font-weight: bold; color: #ffffff; padding:10px; background:#1e1e1e; border: 2px solid #1cb0f6; border-radius: 10px;}}
             </style>
         </head>
         <body>
             <div id="game-container">
                 <button id="start-btn">Start Stroop Test</button>
                 <div id="game-ui" style="display:none;">
-                    <div id="word-display">READY</div>
+                    <div id="word-display" style="color: #ffffff;">READY</div>
                     <div class="btn-grid">
                         <button class="color-btn" style="background:#ff4b4b;" onclick="checkAnswer('red')">RED</button>
                         <button class="color-btn" style="background:#1cb0f6;" onclick="checkAnswer('blue')">BLUE</button>
@@ -240,10 +245,9 @@ with tab2:
                 function nextRound() {{
                     if (currentRound >= maxRounds) {{ finishGame(); return; }}
                     
-                    // Logic to create confusing (incongruent) word/color pairs
                     let textIndex = Math.floor(Math.random() * colors.length);
                     let colorIndex = Math.floor(Math.random() * colors.length);
-                    if (Math.random() > 0.3) {{ // 70% chance to be different (hard mode)
+                    if (Math.random() > 0.3) {{ 
                         while(colorIndex === textIndex) colorIndex = Math.floor(Math.random() * colors.length);
                     }}
                     
@@ -272,7 +276,6 @@ with tab2:
                     
                     let avgRT = Math.round(totalRT / maxRounds);
                     
-                    // We map errors to cursor_reversals so the backend schema accepts it
                     let payload = {{
                         "task_type": "stroop_test", "age_group": "19-25",
                         "action_initiation_time_ms": avgRT, "total_response_time_ms": totalRT,
@@ -286,7 +289,7 @@ with tab2:
                         }});
                         let data = await res.json();
                         document.getElementById('result').innerHTML = `
-                            Avg Reaction: ${{avgRT}}ms | Mistakes: ${{errors}}/5<br><hr style="margin:5px 0;">
+                            Avg Reaction: ${{avgRT}}ms | Mistakes: ${{errors}}/5<br><hr style="margin:5px 0; border-top: 1px solid #1cb0f6;">
                             <span style="color:#1cb0f6;">Pattern: ${{data.analysis.detected_pattern}}</span><br>
                             🦸‍♂️ <b>${{data.analysis.superpower}}</b>
                         `;
