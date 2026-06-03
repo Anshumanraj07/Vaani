@@ -2,6 +2,7 @@ import os
 import sys
 
 from dotenv import load_dotenv
+from pinecone import data
 # Load environment variables from .env file early so services can access them
 load_dotenv()
 
@@ -79,6 +80,38 @@ async def analyze_interaction(telemetry: TaskTelemetry):
         result = analyze_telemetry(telemetry.model_dump())
         save_session(telemetry.task_type, telemetry.total_response_time_ms, result['detected_pattern'], result['superpower'])
         print("✅ [main.py] Returning interaction analysis")
+
+        # --- YAHAN SE SUPABASE INSERT SHURU (PASTE THIS BEFORE RETURN) ---
+        try:
+            import os
+            from supabase import create_client
+            
+            # Render Environment se keys uthana
+            supa_url = os.environ.get("SUPABASE_URL")
+            supa_key = os.environ.get("SUPABASE_KEY")
+            
+            if supa_url and supa_key:
+                supabase_db = create_client(supa_url, supa_key)
+                session_payload = {
+                    "user_id": data.user_id,
+                    "game_type": data.task_type,
+                    "metrics": {
+                        "age_group": data.age_group,
+                        "action_initiation_time_ms": data.action_initiation_time_ms,
+                        "total_response_time_ms": data.total_response_time_ms,
+                        "cursor_reversals": data.cursor_reversals,
+                        "is_correct": data.is_correct
+                    }
+                }
+                # Database mein data push
+                supabase_db.table("game_sessions").insert(session_payload).execute()
+                print("✅ [main.py] Data successfully saved to Supabase 'game_sessions'!")
+            else:
+                print("❌ [main.py] Supabase URL or Key not found in Environment Variables!")
+        except Exception as e:
+            print(f"❌ [main.py] Supabase Insert Error: {str(e)}")
+        # --- YAHAN TAK SUPABASE INSERT KHATAM ---
+        
         return {"status": "success", "analysis": result}
     except Exception as e:
         print(f"❌ [main.py] Error: {e}")

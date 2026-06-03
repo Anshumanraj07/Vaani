@@ -7,4 +7,5 @@ pandas
 requests
 python-dotenv
 python-multipart
-pinecone-client
+supabase
+pinecone
