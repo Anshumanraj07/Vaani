@@ -81,7 +81,7 @@ async def analyze_interaction(telemetry: TaskTelemetry):
         save_session(telemetry.task_type, telemetry.total_response_time_ms, result['detected_pattern'], result['superpower'])
         print("✅ [main.py] Returning interaction analysis")
 
-        # --- YAHAN SE SUPABASE INSERT SHURU (PASTE THIS BEFORE RETURN) ---
+        # --- YAHAN SE SUPABASE INSERT SHURU ---
         try:
             import os
             from supabase import create_client
@@ -93,14 +93,14 @@ async def analyze_interaction(telemetry: TaskTelemetry):
             if supa_url and supa_key:
                 supabase_db = create_client(supa_url, supa_key)
                 session_payload = {
-                    "user_id": data.user_id,
-                    "game_type": data.task_type,
+                    "user_id": telemetry.user_id,
+                    "game_type": telemetry.task_type,
                     "metrics": {
-                        "age_group": data.age_group,
-                        "action_initiation_time_ms": data.action_initiation_time_ms,
-                        "total_response_time_ms": data.total_response_time_ms,
-                        "cursor_reversals": data.cursor_reversals,
-                        "is_correct": data.is_correct
+                        "age_group": telemetry.age_group,
+                        "action_initiation_time_ms": telemetry.action_initiation_time_ms,
+                        "total_response_time_ms": telemetry.total_response_time_ms,
+                        "cursor_reversals": telemetry.cursor_reversals,
+                        "is_correct": telemetry.is_correct
                     }
                 }
                 # Database mein data push
