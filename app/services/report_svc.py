@@ -1,5 +1,6 @@
 import os
-from llama_index.core import Document, VectorStoreIndex
+from llama_index.core import Document, SummaryIndex, Settings
+from llama_index.core.embeddings import MockEmbedding
 from llama_index.llms.groq import Groq
 
 def generate_historical_report(sessions_list: list):
@@ -17,14 +18,19 @@ def generate_historical_report(sessions_list: list):
         text_content = f"Task: {game_type} | Age Group: {metrics.get('age_group')} | Latency: {metrics.get('action_initiation_time_ms')}ms | Total Time: {metrics.get('total_response_time_ms')}ms | Errors: {metrics.get('cursor_reversals')}"
         documents.append(Document(text=text_content))
 
-    # 2. Configure Groq via LlamaIndex
+    # 2. Configure Groq via LlamaIndex & Bypass OpenAI Embeddings
     groq_api_key = os.environ.get("GROQ_API_KEY")
-    llm = Groq(model="llama-3.3-70b-versatile", api_key=groq_api_key)
+    
+    # Set Groq as the main LLM brain
+    Settings.llm = Groq(model="llama-3.3-70b-versatile", api_key=groq_api_key)
+    
+    # Use MockEmbedding to completely bypass OpenAI API key requirement
+    Settings.embed_model = MockEmbedding(embed_dim=1)
 
     try:
-        # 3. Build Vector Index and Query Engine
-        index = VectorStoreIndex.from_documents(documents)
-        query_engine = index.as_query_engine(llm=llm)
+        # 3. Build Summary Index (Best for synthesizing a handful of records without embeddings)
+        index = SummaryIndex.from_documents(documents)
+        query_engine = index.as_query_engine()
 
         # 4. Strict Clinical Query
         clinical_query = """
