@@ -14,6 +14,7 @@ from app.services.whisper_svc import transcribe_audio
 from app.schemas.telemetry import TaskTelemetry
 from app.services.interaction_svc import analyze_telemetry
 from app.services.db_svc import save_session, get_all_sessions
+from app.services.report_svc import generate_historical_report
 
 app = FastAPI(title="Vaani")
 
@@ -144,3 +145,30 @@ async def startup_event():
         print(f"⚠️  STARTUP WARNING: Optional variables not set: {', '.join(missing_optional)}. Some features will be disabled.")
     
     print("✅ [main.py] Startup validation complete. All required vars present.")
+
+
+
+@app.post("/api/v1/generate-report")
+async def get_clinical_report(payload: dict):
+    user_id = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Missing user_id in payload")
+        
+    try:
+        from supabase import create_client
+        supa_url = os.environ.get("SUPABASE_URL")
+        supa_key = os.environ.get("SUPABASE_KEY")
+        
+        if not supa_url or not supa_key:
+            raise HTTPException(status_code=500, detail="Supabase keys not configured")
+            
+        supabase_db = create_client(supa_url, supa_key)
+        
+        # Fetch all historical sessions for this specific user
+        res = supabase_db.table("game_sessions").select("*").eq("user_id", user_id).execute()
+        
+        # Run LlamaIndex synthesis
+        report = generate_historical_report(res.data)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

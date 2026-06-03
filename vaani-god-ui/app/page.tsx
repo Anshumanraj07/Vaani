@@ -98,8 +98,7 @@ export default function VaaniApp() {
   );
 }
 
-// --------------------------------------------------------
-// 1. VOICE MODULE 
+// 1. VOICE MODULE (Updated for Clinical Diagnostics)
 // --------------------------------------------------------
 function VoiceModule({ userId }: { userId: string }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -108,6 +107,20 @@ function VoiceModule({ userId }: { userId: string }) {
   const [result, setResult] = useState<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
+
+  // Clinical Voice Prompts
+  const prompts = [
+    "Describe a recent situation where you felt completely overwhelmed.",
+    "Count backwards from 100 by 7s for the next 15 seconds.",
+    "Explain the steps you take when planning a complex task.",
+    "Describe your typical morning routine in detail."
+  ];
+  const [activePrompt, setActivePrompt] = useState(prompts[0]);
+
+  useEffect(() => {
+    // Pick a random prompt when the component mounts
+    setActivePrompt(prompts[Math.floor(Math.random() * prompts.length)]);
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -123,7 +136,7 @@ function VoiceModule({ userId }: { userId: string }) {
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      setStatus("Recording... Speak naturally.");
+      setStatus("Recording vocal biomarkers...");
     } catch (err) {
       alert("Microphone permission denied.");
     }
@@ -137,31 +150,31 @@ function VoiceModule({ userId }: { userId: string }) {
 
   const analyzeAudio = async () => {
     if (!audioBlob) return;
-    setStatus("Analyzing neural patterns...");
+    setStatus("Analyzing neural and speech patterns...");
     const formData = new FormData();
     formData.append("file", new File([audioBlob], "recording.wav", { type: "audio/wav" }));
-    // Future update: Pass userId in formData if backend needs voice-to-user linking
     formData.append("user_id", userId); 
 
     try {
       const res = await fetch(`${API_URL}/api/v1/analyze-audio`, { method: "POST", body: formData });
       const data = await res.json();
       setResult(data);
-      setStatus("Analysis Complete.");
+      setStatus("Diagnostic Complete.");
     } catch (err) {
-      setStatus("Error connecting to server.");
+      setStatus("Error connecting to diagnostic server.");
     }
-  };
-
-  const playTTS = (text: string) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.speak(utterance);
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-      <h1 className="text-3xl font-bold tracking-tight mb-2">Vocal Telemetry</h1>
-      <p className="text-gray-500 mb-8">Record your baseline audio to detect cognitive markers and speech patterns.</p>
+      <h1 className="text-3xl font-bold tracking-tight mb-2">Vocal Biomarker Analysis</h1>
+      <p className="text-gray-500 mb-8">Analyze speech cadence and articulation for cognitive load indicators.</p>
+
+      {/* The Prompt Box */}
+      <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Subject Prompt</h3>
+        <p className="text-sm font-medium text-black">"{activePrompt}"</p>
+      </div>
 
       <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center">
         <div className="relative mb-6">
@@ -188,7 +201,7 @@ function VoiceModule({ userId }: { userId: string }) {
             onClick={analyzeAudio}
             className="px-6 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
           >
-            Process Audio Baseline
+            Run Clinical Analysis
           </button>
         )}
       </div>
@@ -196,22 +209,21 @@ function VoiceModule({ userId }: { userId: string }) {
       {result && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mt-6 space-y-4">
           <div className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Transcription</h3>
-            <p className="text-lg italic text-gray-800">"{result.transcription?.text || result.text}"</p>
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Transcription Log</h3>
+            <p className="text-sm italic text-gray-800">"{result.transcription?.text || result.text}"</p>
           </div>
           <div className="p-6 bg-black text-white rounded-2xl shadow-lg relative overflow-hidden">
             <div className="relative z-10">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Detected Superpower</h3>
-              <p className="text-xl font-medium mb-4">{result.cognitive_analysis?.superpower || "Pattern Identified"}</p>
-              <button
-                onClick={() => playTTS(result.cognitive_analysis?.superpower || "Pattern Identified")}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                <Play size={16} /> Hear Insight
-              </button>
-            </div>
-            <div className="absolute -bottom-10 -right-10 opacity-10">
-              <Brain size={150} />
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Primary Cognitive Marker</h3>
+              {/* Note: Backend needs to send 'primary_marker' instead of 'superpower' now */}
+              <p className="text-xl font-medium mb-4">{result.cognitive_analysis?.primary_marker || "Neurotypical Speech Pattern Detected"}</p>
+              
+              {result.cognitive_analysis?.clinical_notes && (
+                <div className="mt-4 pt-4 border-t border-gray-800">
+                  <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Clinical Notes</h3>
+                  <p className="text-sm text-gray-300">{result.cognitive_analysis.clinical_notes}</p>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -457,11 +469,12 @@ function StroopGame({ userId, onBack }: { userId: string, onBack: () => void }) 
 function TelemetryModule({ userId }: { userId: string }) {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState<string>("");
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      // 🔥 Sirf us user ka data fetch hoga Supabase se
       const { data, error } = await supabase
         .from('game_sessions')
         .select('*')
@@ -476,9 +489,24 @@ function TelemetryModule({ userId }: { userId: string }) {
     setLoading(false);
   };
 
+  const runLlamaIndexReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/generate-report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId })
+      });
+      const data = await res.json();
+      setReport(data.summary || "No synthesis returned.");
+    } catch (e) {
+      setReport("Failed to generate clinical synthesis.");
+    }
+    setGeneratingReport(false);
+  };
+
   useEffect(() => { fetchHistory(); }, [userId]);
 
-  // JSONB metrics se calculation (FastAPI backend structure)
   const avgRT = sessions.length > 0 
     ? Math.round(sessions.reduce((acc, curr) => acc + (curr.metrics?.action_initiation_time_ms || 0), 0) / sessions.length) 
     : 0;
@@ -508,15 +536,27 @@ function TelemetryModule({ userId }: { userId: string }) {
 
       <div className="p-8 bg-black text-white rounded-2xl shadow-lg relative overflow-hidden">
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-4 text-gray-400">
-            <BarChart3 size={20} /> <span className="font-semibold uppercase tracking-wider text-sm">Executive Summary</span>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2 text-gray-400">
+              <BarChart3 size={20} /> <span className="font-semibold uppercase tracking-wider text-sm">LlamaIndex Aggregate Synthesis</span>
+            </div>
+            {sessions.length > 0 && (
+              <button 
+                onClick={runLlamaIndexReport} 
+                disabled={generatingReport}
+                className="px-3 py-1 bg-white text-black text-xs font-bold rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                {generatingReport ? "COMPILING..." : "GENERATE REPORT"}
+              </button>
+            )}
           </div>
-          {sessions.length > 0 ? (
-            <p className="text-lg leading-relaxed text-gray-200">
-              Analysis of <b className="text-white">{sessions.length}</b> logged interactions indicates a stable motor-cognitive mean latency of <b className="text-white">{avgRT}ms</b>. The latest diagnostic forms your secured cognitive baseline.
-            </p>
+          
+          {report ? (
+            <p className="text-sm leading-relaxed text-gray-200 font-mono">{report}</p>
+          ) : sessions.length > 0 ? (
+            <p className="text-gray-400 italic text-sm">Click 'Generate Report' to execute LlamaIndex RAG analysis across all logged entries.</p>
           ) : (
-            <p className="text-gray-400 italic">Insufficient telemetry data. Please complete a diagnostic module first.</p>
+            <p className="text-gray-400 italic text-sm">Insufficient telemetry data. Please complete a diagnostic module first.</p>
           )}
         </div>
       </div>
