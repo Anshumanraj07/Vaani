@@ -2,17 +2,46 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Square, Play, Target, Palette, BarChart3, RefreshCw, Activity, Brain } from "lucide-react";
+import { Mic, Square, Play, Target, Palette, BarChart3, RefreshCw, Activity, Brain, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../lib/supabase"; // Path dhyan se check kar lena (agar lib root me hai toh '@/lib/supabase' ya '../lib/supabase')
 
 const API_URL = "https://vaani-fppo.onrender.com";
 
 export default function VaaniApp() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("voice");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+
   const tabs = [
     { id: "voice", label: "Voice AI", icon: <Mic size={16} /> },
     { id: "games", label: "Cognitive Module", icon: <Brain size={16} /> },
     { id: "telemetry", label: "Telemetry", icon: <Activity size={16} /> },
   ];
+
+  // --- THE BOUNCER: Route Protection & Session Check ---
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/auth"); // Login nahi hai toh bahar fenko
+      } else {
+        setUserId(session.user.id);
+        setLoadingSession(false);
+      }
+    };
+    checkUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/auth");
+  };
+
+  if (loadingSession) {
+    return <div className="min-h-screen bg-[#fafafa] flex items-center justify-center font-mono text-xs tracking-widest uppercase">Verifying Clearance...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#111] font-sans selection:bg-black selection:text-white">
@@ -24,28 +53,35 @@ export default function VaaniApp() {
             VAANI.
           </div>
           
-          {/* Vercel Style Animated Tab Switcher */}
-          <div className="flex p-1 bg-gray-100/80 rounded-lg">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative px-4 py-1.5 text-sm font-medium transition-colors rounded-md flex items-center gap-2 z-10 ${
-                  activeTab === tab.id ? "text-black" : "text-gray-500 hover:text-black"
-                }`}
-              >
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="active-tab"
-                    className="absolute inset-0 bg-white rounded-md shadow-sm border border-gray-200/50"
-                    style={{ zIndex: -1 }}
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-6">
+            {/* Tab Switcher */}
+            <div className="flex p-1 bg-gray-100/80 rounded-lg">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative px-4 py-1.5 text-sm font-medium transition-colors rounded-md flex items-center gap-2 z-10 ${
+                    activeTab === tab.id ? "text-black" : "text-gray-500 hover:text-black"
+                  }`}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="active-tab"
+                      className="absolute inset-0 bg-white rounded-md shadow-sm border border-gray-200/50"
+                      style={{ zIndex: -1 }}
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Logout Button */}
+            <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors">
+              <LogOut size={18} />
+            </button>
           </div>
         </div>
       </header>
@@ -53,9 +89,9 @@ export default function VaaniApp() {
       {/* Main Content Area */}
       <main className="max-w-4xl mx-auto px-6 py-12">
         <AnimatePresence mode="wait">
-          {activeTab === "voice" && <VoiceModule key="voice" />}
-          {activeTab === "games" && <GamesModule key="games" />}
-          {activeTab === "telemetry" && <TelemetryModule key="telemetry" />}
+          {activeTab === "voice" && <VoiceModule key="voice" userId={userId!} />}
+          {activeTab === "games" && <GamesModule key="games" userId={userId!} />}
+          {activeTab === "telemetry" && <TelemetryModule key="telemetry" userId={userId!} />}
         </AnimatePresence>
       </main>
     </div>
@@ -63,9 +99,9 @@ export default function VaaniApp() {
 }
 
 // --------------------------------------------------------
-// 1. VOICE MODULE (Native Web Audio API)
+// 1. VOICE MODULE 
 // --------------------------------------------------------
-function VoiceModule() {
+function VoiceModule({ userId }: { userId: string }) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [status, setStatus] = useState("Idle");
@@ -104,6 +140,8 @@ function VoiceModule() {
     setStatus("Analyzing neural patterns...");
     const formData = new FormData();
     formData.append("file", new File([audioBlob], "recording.wav", { type: "audio/wav" }));
+    // Future update: Pass userId in formData if backend needs voice-to-user linking
+    formData.append("user_id", userId); 
 
     try {
       const res = await fetch(`${API_URL}/api/v1/analyze-audio`, { method: "POST", body: formData });
@@ -159,20 +197,19 @@ function VoiceModule() {
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mt-6 space-y-4">
           <div className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Transcription</h3>
-            <p className="text-lg italic text-gray-800">"{result.transcription.text}"</p>
+            <p className="text-lg italic text-gray-800">"{result.transcription?.text || result.text}"</p>
           </div>
           <div className="p-6 bg-black text-white rounded-2xl shadow-lg relative overflow-hidden">
             <div className="relative z-10">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Detected Superpower</h3>
-              <p className="text-xl font-medium mb-4">{result.cognitive_analysis.superpower}</p>
+              <p className="text-xl font-medium mb-4">{result.cognitive_analysis?.superpower || "Pattern Identified"}</p>
               <button
-                onClick={() => playTTS(result.cognitive_analysis.superpower)}
+                onClick={() => playTTS(result.cognitive_analysis?.superpower || "Pattern Identified")}
                 className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 <Play size={16} /> Hear Insight
               </button>
             </div>
-            {/* Minimalist background decoration */}
             <div className="absolute -bottom-10 -right-10 opacity-10">
               <Brain size={150} />
             </div>
@@ -184,9 +221,9 @@ function VoiceModule() {
 }
 
 // --------------------------------------------------------
-// 2. GAMES MODULE (React Native Logic)
+// 2. GAMES MODULE
 // --------------------------------------------------------
-function GamesModule() {
+function GamesModule({ userId }: { userId: string }) {
   const [activeGame, setActiveGame] = useState<"menu" | "tracker" | "stroop">("menu");
 
   return (
@@ -209,14 +246,14 @@ function GamesModule() {
           </div>
         </>
       )}
-      {activeGame === "tracker" && <TrackerGame onBack={() => setActiveGame("menu")} />}
-      {activeGame === "stroop" && <StroopGame onBack={() => setActiveGame("menu")} />}
+      {activeGame === "tracker" && <TrackerGame userId={userId} onBack={() => setActiveGame("menu")} />}
+      {activeGame === "stroop" && <StroopGame userId={userId} onBack={() => setActiveGame("menu")} />}
     </motion.div>
   );
 }
 
 // --- SUB-GAME: Tracker ---
-function TrackerGame({ onBack }: { onBack: () => void }) {
+function TrackerGame({ userId, onBack }: { userId: string, onBack: () => void }) {
   const [phase, setPhase] = useState<"idle" | "playing" | "done">("idle");
   const [hits, setHits] = useState(0);
   const [misses, setMisses] = useState(0);
@@ -232,7 +269,7 @@ function TrackerGame({ onBack }: { onBack: () => void }) {
   };
 
   const spawn = () => {
-    if (hits >= 19) { finish(); return; } // Ends at 20
+    if (hits >= 19) { finish(); return; } 
     if (containerRef.current) {
       const maxX = containerRef.current.clientWidth - 50;
       const maxY = containerRef.current.clientHeight - 50;
@@ -254,9 +291,24 @@ function TrackerGame({ onBack }: { onBack: () => void }) {
   const finish = async () => {
     setPhase("done");
     const avgRT = Math.round(totalRTRef.current / 20);
-    const payload = { task_type: "spatial_rotation", age_group: "19-25", action_initiation_time_ms: avgRT, total_response_time_ms: totalRTRef.current, cursor_reversals: misses, is_correct: true };
+    
+    // 🔥 Payload mein userId add ho gayi
+    const payload = { 
+      user_id: userId,
+      task_type: "spatial_rotation", 
+      age_group: "19-25", 
+      action_initiation_time_ms: avgRT, 
+      total_response_time_ms: totalRTRef.current, 
+      cursor_reversals: misses, 
+      is_correct: true 
+    };
+    
     try {
-      const res = await fetch(`${API_URL}/api/v1/analyze-interaction`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetch(`${API_URL}/api/v1/analyze-interaction`, { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(payload) 
+      });
       setResult(await res.json());
     } catch (e) { alert("API Error"); }
   };
@@ -281,7 +333,7 @@ function TrackerGame({ onBack }: { onBack: () => void }) {
         {phase === "done" && result && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-8 text-center">
             <p className="text-xs font-bold text-gray-400 uppercase mb-2">Diagnostic Complete</p>
-            <h3 className="text-2xl font-bold mb-4">{result.analysis.detected_pattern}</h3>
+            <h3 className="text-2xl font-bold mb-4">{result.analysis?.detected_pattern || 'Pattern Logged'}</h3>
             <div className="flex gap-4 mb-6">
               <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-100"><span className="block text-xs text-gray-500">Avg Latency</span><span className="font-bold">{Math.round(totalRTRef.current / 20)}ms</span></div>
               <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-100"><span className="block text-xs text-gray-500">Inaccuracies</span><span className="font-bold">{misses}</span></div>
@@ -295,7 +347,7 @@ function TrackerGame({ onBack }: { onBack: () => void }) {
 }
 
 // --- SUB-GAME: Stroop ---
-function StroopGame({ onBack }: { onBack: () => void }) {
+function StroopGame({ userId, onBack }: { userId: string, onBack: () => void }) {
   const colors = ["red", "blue", "green", "yellow"];
   const hexMap: Record<string, string> = { red: "#ff4b4b", blue: "#1cb0f6", green: "#58cc02", yellow: "#ffc800" };
   
@@ -312,7 +364,7 @@ function StroopGame({ onBack }: { onBack: () => void }) {
   const start = () => { setRound(0); setErrors(0); totalRTRef.current = 0; setPhase("playing"); nextRound(); };
 
   const nextRound = () => {
-    if (round >= 11) { finish(); return; } // Ends at 12
+    if (round >= 11) { finish(); return; } 
     const textIdx = Math.floor(Math.random() * colors.length);
     let colorIdx = Math.floor(Math.random() * colors.length);
     if (Math.random() > 0.3) { while (colorIdx === textIdx) colorIdx = Math.floor(Math.random() * colors.length); }
@@ -332,9 +384,24 @@ function StroopGame({ onBack }: { onBack: () => void }) {
   const finish = async () => {
     setPhase("done");
     const avgRT = Math.round(totalRTRef.current / 12);
-    const payload = { task_type: "stroop_test", age_group: "19-25", action_initiation_time_ms: avgRT, total_response_time_ms: totalRTRef.current, cursor_reversals: errors, is_correct: (errors === 0) };
+    
+    // 🔥 Payload mein userId add ho gayi
+    const payload = { 
+      user_id: userId,
+      task_type: "stroop_test", 
+      age_group: "19-25", 
+      action_initiation_time_ms: avgRT, 
+      total_response_time_ms: totalRTRef.current, 
+      cursor_reversals: errors, 
+      is_correct: (errors === 0) 
+    };
+
     try {
-      const res = await fetch(`${API_URL}/api/v1/analyze-interaction`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetch(`${API_URL}/api/v1/analyze-interaction`, { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(payload) 
+      });
       setResult(await res.json());
     } catch (e) { alert("API Error"); }
   };
@@ -371,7 +438,7 @@ function StroopGame({ onBack }: { onBack: () => void }) {
         {phase === "done" && result && (
           <div className="text-center p-8">
             <p className="text-xs font-bold text-gray-400 uppercase mb-2">Analysis Complete</p>
-            <h3 className="text-2xl font-bold mb-4">{result.analysis.detected_pattern}</h3>
+            <h3 className="text-2xl font-bold mb-4">{result.analysis?.detected_pattern || 'Pattern Logged'}</h3>
             <div className="flex justify-center gap-4 mb-6">
               <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-100"><span className="block text-xs text-gray-500">Avg Latency</span><span className="font-bold">{Math.round(totalRTRef.current / 12)}ms</span></div>
               <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-100"><span className="block text-xs text-gray-500">Inhibition Failures</span><span className="font-bold text-red-500">{errors}</span></div>
@@ -385,33 +452,43 @@ function StroopGame({ onBack }: { onBack: () => void }) {
 }
 
 // --------------------------------------------------------
-// 3. TELEMETRY DASHBOARD (Minimalist API Fetch)
+// 3. TELEMETRY DASHBOARD (Secure Supabase Fetch)
 // --------------------------------------------------------
-function TelemetryModule() {
-  const [data, setData] = useState<any[]>([]);
+function TelemetryModule({ userId }: { userId: string }) {
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/v1/history`);
-      const json = await res.json();
-      setData(json.data || []);
-    } catch (e) { console.error(e); }
+      // 🔥 Sirf us user ka data fetch hoga Supabase se
+      const { data, error } = await supabase
+        .from('game_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSessions(data || []);
+    } catch (e) { 
+      console.error("Telemetry Sync Failed:", e); 
+    }
     setLoading(false);
   };
 
-  useEffect(() => { fetchHistory(); }, []);
+  useEffect(() => { fetchHistory(); }, [userId]);
 
-  const avgRT = data.length > 0 ? Math.round(data.reduce((acc, curr) => acc + curr.reaction_time_ms, 0) / data.length) : 0;
-  const latestPattern = data.length > 0 ? data[data.length - 1].detected_pattern : "N/A";
+  // JSONB metrics se calculation (FastAPI backend structure)
+  const avgRT = sessions.length > 0 
+    ? Math.round(sessions.reduce((acc, curr) => acc + (curr.metrics?.action_initiation_time_ms || 0), 0) / sessions.length) 
+    : 0;
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Session Telemetry</h1>
-          <p className="text-gray-500">Historical logs and cognitive baseline analysis.</p>
+          <p className="text-gray-500">Historical logs and private cognitive baseline analysis.</p>
         </div>
         <button onClick={fetchHistory} className="p-2 border border-gray-200 rounded-md hover:bg-gray-50 text-gray-600 transition-colors">
           <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
@@ -421,7 +498,7 @@ function TelemetryModule() {
       <div className="grid md:grid-cols-2 gap-4 mb-8">
         <div className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
           <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Sessions</p>
-          <p className="text-4xl font-black">{data.length}</p>
+          <p className="text-4xl font-black">{sessions.length}</p>
         </div>
         <div className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
           <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Mean Latency</p>
@@ -434,9 +511,9 @@ function TelemetryModule() {
           <div className="flex items-center gap-2 mb-4 text-gray-400">
             <BarChart3 size={20} /> <span className="font-semibold uppercase tracking-wider text-sm">Executive Summary</span>
           </div>
-          {data.length > 0 ? (
+          {sessions.length > 0 ? (
             <p className="text-lg leading-relaxed text-gray-200">
-              Analysis of <b className="text-white">{data.length}</b> logged interactions indicates a stable motor-cognitive mean latency of <b className="text-white">{avgRT}ms</b>. The latest diagnostic highlights a pattern consistent with <b className="text-white">"{latestPattern}"</b>, forming the current cognitive baseline.
+              Analysis of <b className="text-white">{sessions.length}</b> logged interactions indicates a stable motor-cognitive mean latency of <b className="text-white">{avgRT}ms</b>. The latest diagnostic forms your secured cognitive baseline.
             </p>
           ) : (
             <p className="text-gray-400 italic">Insufficient telemetry data. Please complete a diagnostic module first.</p>
