@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Square, Play, Target, Palette, BarChart3, RefreshCw, Activity, Brain, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { supabase } from '../../lib/supabase'; 
+import { supabase } from '@/lib/supabase';
 
 const API_URL = "https://vaani-fppo.onrender.com";
 
