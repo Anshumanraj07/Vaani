@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <img src="./public/logo.png" alt="Vaani Logo" width="120" />
+  <h1>Vaani</h1>
+  <p><strong>Cognitive Diagnostic & Biomarker Dashboard (MVP v1.0)</strong></p>
+</div>
 
-## Getting Started
+<hr />
 
-First, run the development server:
+## 1. Project Overview
+Vaani is a lightweight, cloud-native cognitive diagnostic dashboard. It functions as a digital biomarker tracking system, analyzing kinematic interactions and speech patterns to establish a clinical baseline for cognitive load and executive function.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 2. Architecture & Tech Stack
+Designed for zero-cost deployment and rapid execution.
+* **Frontend:** Next.js, Tailwind CSS, Framer Motion (Deployed via Vercel).
+* **Backend:** Python, FastAPI, Dockerized container (Deployed via Render).
+* **Database & Auth:** Supabase (PostgreSQL) secured with strict Row Level Security (RLS) and JWT authentication.
+* **AI & Inference:** Groq API (Llama 3.3) for lightning-fast text processing, Groq Whisper for audio transcription.
+* **Data Orchestration:** LlamaIndex (SummaryIndex) for lightweight Retrieval-Augmented Generation (RAG).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 3. Core Modules
+* **Kinematic Telemetry (Game Sessions):** Tracks user motor latency (ms), action initiation time, and impulse control errors (cursor reversals) via tasks like the Stroop Test and Spatial Tracker.
+* **Vocal Biomarker Analysis:** Captures real-time audio prompts, transcribes via Whisper, and analyzes speech cadence for hesitation and structural patterns.
+* **Diagnostic Synthesizer (RAG):** Aggregates historical telemetry logs stored in Supabase to generate a minimalist, objective 3-sentence clinical summary.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 4. Strategic Engineering Constraints (v1.0)
+* **Lean Deployment:** Bypassed heavy Vector Databases (like Pinecone) in favor of LlamaIndex Summary RAG to keep infrastructure costs at $0 while proving the architectural concept.
+* **Synchronous Processing:** Utilized direct API endpoints over asynchronous queues (Redis/Celery) to maintain a simplistic, easy-to-debug monolithic backend suitable for early-stage prototype demonstration.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 5. Current Status
+**100% Operational.** The system successfully authenticates users, captures multimodal data (audio/kinematics), processes diagnostics via LLM, and securely writes to a protected database. Ready for portfolio integration and technical capability demonstration.
