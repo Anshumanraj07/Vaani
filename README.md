@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/TERA_GITHUB_USERNAME/TERA_REPO_NAME/main/public/logo.png" alt="Vaani Logo" width="150" />
+</p>
+
 # 🧠 Vaani: Cognitive Diagnostic & Biomarker Dashboard (MVP v1.0)
 
 ## 1. Project Overview
