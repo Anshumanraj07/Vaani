@@ -24,11 +24,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
+<html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+  <body className="bg-gray-50 text-gray-900">
+    {/* Baaki tera Header aur Main content waisa hi rahega */}
         
         {/* 🌟 GLOBAL NAVBAR / HEADER (Vaani Logo Here) */}
         <header className="w-full bg-white border-b border-gray-200 py-3 px-6 flex items-center gap-3 shadow-sm sticky top-0 z-50">
