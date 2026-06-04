@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="./public/logo.png" alt="Vaani Logo" width="120" />
-  <h1>Vaani</h1>
-  <p><strong>Cognitive Diagnostic & Biomarker Dashboard (MVP v1.0)</strong></p>
-</div>
 
-<hr />
+![Vaani Logo](public/logo.png)
+
+<h1>Vaani</h1>
+<p><strong>Cognitive Diagnostic & Biomarker Dashboard (MVP v1.0)</strong></p>
+</div>
 
 ## 1. Project Overview
 Vaani is a lightweight, cloud-native cognitive diagnostic dashboard. It functions as a digital biomarker tracking system, analyzing kinematic interactions and speech patterns to establish a clinical baseline for cognitive load and executive function.
