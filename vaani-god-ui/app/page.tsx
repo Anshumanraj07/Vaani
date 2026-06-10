@@ -553,9 +553,9 @@ function StroopGame({ userId, onBack }: { userId: string, onBack: () => void }) 
   );
 }
 
-// ========================================================
-// 3. TELEMETRY MODULE (LlamaIndex Aggregate Synthesis RAG)
-// ========================================================
+// --------------------------------------------------------
+// 3. TELEMETRY DASHBOARD (With Interactive Logs List)
+// --------------------------------------------------------
 function TelemetryModule({ userId }: { userId: string }) {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -565,6 +565,7 @@ function TelemetryModule({ userId }: { userId: string }) {
   const fetchHistory = async () => {
     setLoading(true);
     try {
+      console.log("🔍 Fetching telemetry for User UUID:", userId);
       const { data, error } = await supabase
         .from('game_sessions')
         .select('*')
@@ -572,6 +573,8 @@ function TelemetryModule({ userId }: { userId: string }) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log("📦 Supabase se mila data:", data); // Isko browser console (F12) mein check karna
       setSessions(data || []);
     } catch (e) { 
       console.error("Telemetry Sync Failed:", e); 
@@ -624,7 +627,8 @@ function TelemetryModule({ userId }: { userId: string }) {
         </div>
       </div>
 
-      <div className="p-6 md:p-8 bg-black text-white rounded-2xl shadow-xl relative overflow-hidden">
+      {/* LlamaIndex RAG Report Section */}
+      <div className="p-6 md:p-8 bg-black text-white rounded-2xl shadow-xl relative overflow-hidden mb-8">
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-2 text-gray-400">
@@ -650,6 +654,35 @@ function TelemetryModule({ userId }: { userId: string }) {
           )}
         </div>
       </div>
+
+      {/* 🌟 NEW: Live Session List for Portfolio Review */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Raw Telemetry Records</h3>
+        </div>
+        
+        {loading ? (
+          <div className="p-8 text-center text-xs text-gray-400 uppercase font-mono">Syncing Logs...</div>
+        ) : sessions.length === 0 ? (
+          <div className="p-8 text-center text-sm text-gray-400 italic">No telemetry data visible. Verify Supabase SELECT policies.</div>
+        ) : (
+          <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
+            {sessions.map((session, index) => (
+              <div key={session.id || index} className="p-4 flex justify-between items-center text-sm">
+                <div>
+                  <span className="font-bold text-black capitalize">{session.game_type?.replace('_', ' ') || 'Interaction'}</span>
+                  <span className="block text-[10px] text-gray-400 font-mono">{new Date(session.created_at).toLocaleString()}</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono font-bold text-black">{session.metrics?.action_initiation_time_ms || 0}ms</span>
+                  <span className="block text-[10px] text-gray-400 uppercase tracking-wide">Latency</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </motion.div>
   );
 }
